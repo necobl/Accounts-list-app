@@ -11,11 +11,19 @@ let phoneInput = document.querySelector('[placeholder="phone"]');
 let saveBtn = document.querySelector('#save');
 let accountsHeading = document.querySelector('.accounts-heading');
 let selectedID = 0;
+let records_per_page = 10;
 const btnAddAccount = document.querySelector('#nav_add_account_view');
 const btnConfrimDelete = document.querySelector('.delete-confirmed');
 const modalConfirmDelete = new bootstrap.Modal(document.querySelector('.confirm-delete'));
 const modalSucces = new bootstrap.Modal(document.querySelector('.success-modal'));
 const modalError = new bootstrap.Modal(document.querySelector('.error-modal'));
+const selectShowEntries = document.querySelector('#select_show_entries');
+
+selectShowEntries.addEventListener('change', function () {
+    records_per_page = selectShowEntries.value;
+    console.log(records_per_page);
+    createAccountsTable();
+})
 
 btnAddAccount.addEventListener('click', function (e) {
     accountsHeading.innerText = "Add accounts"
@@ -171,7 +179,6 @@ function createAccountsTable() {
                     let nextButton = document.getElementById('button_next');
 
                     let current_page = 1;
-                    let records_per_page = 10;
                     this.init = function () {
                         changePage(1);
                         pageNumbers();
@@ -198,11 +205,16 @@ function createAccountsTable() {
                     };
 
                     let showPageNumberOf = function () {
-                        var showingItems = document.getElementById("showing_items");
-                        var items_per_page = records_per_page - 1;
-                        var firstNumberInfo = records_per_page * current_page;
-                        var firstNumberInfoTotal = firstNumberInfo - items_per_page;
-                        current_page == 1 ? showingItems.innerText = "Showing " + current_page + " to " + records_per_page * current_page + " of " + obj.length + " entries" : showingItems.innerText = "Prikazano " + firstNumberInfoTotal + " - " + records_per_page * current_page + " od " + obj.length + " proizvoda";
+                        let showingItems = document.getElementById("showing_items");
+                        let items_per_page = records_per_page - 1;
+                        let firstNumberInfo = records_per_page * current_page;
+                        let firstNumberInfoTotal = firstNumberInfo - items_per_page;
+                        let ofNumber = records_per_page * current_page;
+                        if (ofNumber > obj.length) {
+                            ofNumber = obj.length
+                        }
+                        current_page == 1 ? showingItems.innerText = "Showing " + current_page + " to " + ofNumber + " of " + obj.length + " entries" : showingItems.innerText = "Showing " + firstNumberInfoTotal + " to " + ofNumber + " of " + obj.length + " entries";
+
                     };
 
                     let changePage = function (page) {
@@ -224,7 +236,7 @@ function createAccountsTable() {
                                 "<td>" + obj[i].name + "</td>" +
                                 "<td>" + obj[i].lastname + "</td>" +
                                 "<td>" + obj[i].email + "</td>" +
-                                "<td>" + obj[i].phone + "</td >" +
+                                "<td>" + obj[i].phone + "</td>" +
                                 "<td><button onclick='editAccount(this)' data-id=" + obj[i].id + " class='btn btn-sm btn-warning edit-btn'>Edit</button></td>" +
                                 "<td><button onclick='deviceDeleteBtnClickHandler(this)' data-id=" + obj[i].id + " class='btn btn-sm btn-danger delete-btn'>Delete</button></td>" +
                                 "</tr>";
@@ -262,6 +274,7 @@ function createAccountsTable() {
                         return Math.ceil(obj.length / records_per_page);
                     };
 
+
                     let pageNumbers = function () {
                         let pageNumber = document.getElementById('page_number');
                         pageNumber.innerHTML = "";
@@ -269,14 +282,13 @@ function createAccountsTable() {
                         for (let i = 1; i < numPages() + 1; i++) {
                             pageNumber.innerHTML += "<button type='button' class='btn btn-outline-primary clickPageNumber'>" + i + "</button>";
                         }
+
                     };
 
 
 
                 }
             }
-
-
 
             let pagination = new Pagination();
             pagination.init();
