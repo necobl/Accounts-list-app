@@ -21,7 +21,6 @@ const selectShowEntries = document.querySelector('#select_show_entries');
 
 selectShowEntries.addEventListener('change', function () {
     records_per_page = selectShowEntries.value;
-    console.log(records_per_page);
     createAccountsTable();
 })
 
