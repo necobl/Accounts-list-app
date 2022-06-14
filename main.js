@@ -22,7 +22,7 @@ const selectShowEntries = document.querySelector('#select_show_entries');
 selectShowEntries.addEventListener('change', function () {
     records_per_page = selectShowEntries.value;
     createAccountsTable();
-})
+});
 
 btnAddAccount.addEventListener('click', function (e) {
     accountsHeading.innerText = "Add accounts"
@@ -38,7 +38,7 @@ btnAddAccount.addEventListener('click', function (e) {
     phoneInput.classList.remove("is-invalid");
     showView("#add_account_view")
 
-})
+});
 
 saveBtn.addEventListener('click', function () {
 
@@ -52,7 +52,7 @@ saveBtn.addEventListener('click', function () {
         return String(emailValue)
             .toLowerCase()
             .match(
-                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
             );
     };
 
@@ -83,32 +83,32 @@ saveBtn.addEventListener('click', function () {
     if (formValid) {
         if (accountsMode === 1) {
 
-
             const newAccount = {
                 name: nameValue,
                 lastname: lastnameValue,
                 email: emailValue,
                 phone: phoneValue
             }
-
-            let xhttp = new XMLHttpRequest();
-            xhttp.open("POST", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users", true);
-            xhttp.setRequestHeader("Content-type", "application/json; charset=utf-8");
-            xhttp.send(JSON.stringify(newAccount));
-            xhttp.onload = function () {
-                if (xhttp.status === 201) {
+            fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newAccount),
+            })
+                .then(response => response.json())
+                .then(() => {
                     createAccountsTable();
                     modalSucces.show();
                     setTimeout(function () { modalSucces.hide(); }, 2000);
                     showView("#accounts_view");
-
-                }
-                if (xhttp.status === 400 || this.status == 500) {
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
                     modalError.show();
                     setTimeout(function () { modalSucces.hide(); }, 2000);
                     showView("#accounts_view");
-                }
-            }
+                });
         }
         else if (accountsMode === 2) {
 
@@ -119,27 +119,27 @@ saveBtn.addEventListener('click', function () {
                 email: emailValue,
                 phone: phoneValue
             }
-
-            let xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
+            fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/' + selectedID, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(editedAccount),
+            })
+                .then(response => response.json())
+                .then(() => {
                     createAccountsTable();
                     modalSucces.show();
                     setTimeout(function () { modalSucces.hide(); }, 2000);
                     showView("#accounts_view");
-                }
-                if (xhttp.status === 400 || this.status == 500) {
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
                     modalError.show();
                     setTimeout(function () { modalSucces.hide(); }, 2000);
                     showView("#accounts_view");
-                }
-
-            }
-            xhttp.open("PUT", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/" + selectedID, true);
-            xhttp.setRequestHeader("Content-type", "application/json; charset=utf-8");
-            xhttp.send(JSON.stringify(editedAccount));
+                });
         }
-
     }
 
 });
@@ -165,12 +165,9 @@ function showView(e) {
 
 function createAccountsTable() {
 
-    let xhttp = new XMLHttpRequest();
-
-    xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            let obj = JSON.parse(this.responseText);
-
+    let request = fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users')
+        .then(response => response.json())
+        .then(obj => {
             class Pagination {
                 constructor() {
 
@@ -291,10 +288,7 @@ function createAccountsTable() {
 
             let pagination = new Pagination();
             pagination.init();
-        }
-    }
-    xhttp.open("GET", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users", true);
-    xhttp.send();
+        });
 }
 
 
@@ -303,10 +297,10 @@ function editAccount(e) {
     accountsHeading.innerText = "Edit accounts"
     accountsMode = 2;
     selectedID = e.getAttribute('data-id');
-    let xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            let obj = JSON.parse(this.responseText);
+
+    fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/' + selectedID)
+        .then(response => response.json())
+        .then(obj => {
             nameInput.value = obj.name;
             lastnameInput.value = obj.lastname;
             emailInput.value = obj.email;
@@ -316,18 +310,11 @@ function editAccount(e) {
             emailInput.classList.remove("is-invalid");
             phoneInput.classList.remove("is-invalid");
             showView("#add_account_view");
-        }
-    }
-    xhttp.open("GET", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/" + selectedID, true);
-    xhttp.send();
+        });
 }
-
-
-
 
 // Delete account
 btnConfrimDelete.addEventListener('click', deleteAccount)
-
 
 function deviceDeleteBtnClickHandler(e) {
     selectedID = e.getAttribute('data-id');
@@ -335,19 +322,19 @@ function deviceDeleteBtnClickHandler(e) {
 };
 
 function deleteAccount() {
-    let xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
+    fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/' + selectedID, {
+        method: 'DELETE',
+    })
+        .then(response => response.json())
+        .then(() => {
             createAccountsTable();
             modalConfirmDelete.hide()
             modalSucces.show();
             setTimeout(function () { modalSucces.hide(); }, 2000);
-        }
-        if (xhttp.status === 400 || this.status == 500) {
+        })
+        .catch((error) => {
+            console.error('Error:', error);
             modalError.show();
             setTimeout(function () { modalSucces.hide(); }, 2000);
-        }
-    }
-    xhttp.open("DELETE", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/" + selectedID, true);
-    xhttp.send();
+        });
 }
