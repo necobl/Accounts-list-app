@@ -202,7 +202,7 @@ function createAccountsTable() {
                         var items_per_page = records_per_page - 1;
                         var firstNumberInfo = records_per_page * current_page;
                         var firstNumberInfoTotal = firstNumberInfo - items_per_page;
-                        current_page == 1 ? showingItems.innerText = "Showing " + current_page + " to " + records_per_page * current_page + " of " + obj.length + " entries" : showingItems.innerText = "Prikazano " + firstNumberInfoTotal + " - " + records_per_page * current_page + " od " + obj.length + " proizvoda";
+                        current_page == 1 ? showingItems.innerText = "Showing " + current_page + " to " + records_per_page * current_page + " of " + obj.length + " entries" : showingItems.innerText = "Showing " + firstNumberInfoTotal + " - " + records_per_page * current_page + " of " + obj.length + " entries";
                     };
 
                     let changePage = function (page) {
