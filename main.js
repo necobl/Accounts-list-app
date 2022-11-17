@@ -11,18 +11,11 @@ let phoneInput = document.querySelector('[placeholder="phone"]');
 let saveBtn = document.querySelector('#save');
 let accountsHeading = document.querySelector('.accounts-heading');
 let selectedID = 0;
-let records_per_page = 10;
 const btnAddAccount = document.querySelector('#nav_add_account_view');
 const btnConfrimDelete = document.querySelector('.delete-confirmed');
 const modalConfirmDelete = new bootstrap.Modal(document.querySelector('.confirm-delete'));
 const modalSucces = new bootstrap.Modal(document.querySelector('.success-modal'));
 const modalError = new bootstrap.Modal(document.querySelector('.error-modal'));
-const selectShowEntries = document.querySelector('#select_show_entries');
-
-selectShowEntries.addEventListener('change', function () {
-    records_per_page = selectShowEntries.value;
-    createAccountsTable();
-});
 
 btnAddAccount.addEventListener('click', function (e) {
     accountsHeading.innerText = "Add accounts"
@@ -38,7 +31,7 @@ btnAddAccount.addEventListener('click', function (e) {
     phoneInput.classList.remove("is-invalid");
     showView("#add_account_view")
 
-});
+})
 
 saveBtn.addEventListener('click', function () {
 
@@ -52,7 +45,7 @@ saveBtn.addEventListener('click', function () {
         return String(emailValue)
             .toLowerCase()
             .match(
-                /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             );
     };
 
@@ -83,32 +76,32 @@ saveBtn.addEventListener('click', function () {
     if (formValid) {
         if (accountsMode === 1) {
 
+
             const newAccount = {
                 name: nameValue,
                 lastname: lastnameValue,
                 email: emailValue,
                 phone: phoneValue
             }
-            fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(newAccount),
-            })
-                .then(response => response.json())
-                .then(() => {
+
+            let xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users", true);
+            xhttp.setRequestHeader("Content-type", "application/json; charset=utf-8");
+            xhttp.send(JSON.stringify(newAccount));
+            xhttp.onload = function () {
+                if (xhttp.status === 201) {
                     createAccountsTable();
                     modalSucces.show();
                     setTimeout(function () { modalSucces.hide(); }, 2000);
                     showView("#accounts_view");
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
+
+                }
+                if (xhttp.status === 400 || this.status == 500) {
                     modalError.show();
                     setTimeout(function () { modalSucces.hide(); }, 2000);
                     showView("#accounts_view");
-                });
+                }
+            }
         }
         else if (accountsMode === 2) {
 
@@ -119,27 +112,27 @@ saveBtn.addEventListener('click', function () {
                 email: emailValue,
                 phone: phoneValue
             }
-            fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/' + selectedID, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(editedAccount),
-            })
-                .then(response => response.json())
-                .then(() => {
+
+            let xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
                     createAccountsTable();
                     modalSucces.show();
                     setTimeout(function () { modalSucces.hide(); }, 2000);
                     showView("#accounts_view");
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
+                }
+                if (xhttp.status === 400 || this.status == 500) {
                     modalError.show();
                     setTimeout(function () { modalSucces.hide(); }, 2000);
                     showView("#accounts_view");
-                });
+                }
+
+            }
+            xhttp.open("PUT", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/" + selectedID, true);
+            xhttp.setRequestHeader("Content-type", "application/json; charset=utf-8");
+            xhttp.send(JSON.stringify(editedAccount));
         }
+
     }
 
 });
@@ -165,9 +158,12 @@ function showView(e) {
 
 function createAccountsTable() {
 
-    let request = fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users')
-        .then(response => response.json())
-        .then(obj => {
+    let xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            let obj = JSON.parse(this.responseText);
+
             class Pagination {
                 constructor() {
 
@@ -175,6 +171,7 @@ function createAccountsTable() {
                     let nextButton = document.getElementById('button_next');
 
                     let current_page = 1;
+                    let records_per_page = 30;
                     this.init = function () {
                         changePage(1);
                         pageNumbers();
@@ -201,16 +198,11 @@ function createAccountsTable() {
                     };
 
                     let showPageNumberOf = function () {
-                        let showingItems = document.getElementById("showing_items");
-                        let items_per_page = records_per_page - 1;
-                        let firstNumberInfo = records_per_page * current_page;
-                        let firstNumberInfoTotal = firstNumberInfo - items_per_page;
-                        let ofNumber = records_per_page * current_page;
-                        if (ofNumber > obj.length) {
-                            ofNumber = obj.length
-                        }
-                        current_page == 1 ? showingItems.innerText = "Showing " + current_page + " to " + ofNumber + " of " + obj.length + " entries" : showingItems.innerText = "Showing " + firstNumberInfoTotal + " to " + ofNumber + " of " + obj.length + " entries";
-
+                        var showingItems = document.getElementById("showing_items");
+                        var items_per_page = records_per_page - 1;
+                        var firstNumberInfo = records_per_page * current_page;
+                        var firstNumberInfoTotal = firstNumberInfo - items_per_page;
+                        current_page == 1 ? showingItems.innerText = "Showing " + current_page + " to " + records_per_page * current_page + " of " + obj.length + " entries" : showingItems.innerText = "Prikazano " + firstNumberInfoTotal + " - " + records_per_page * current_page + " od " + obj.length + " proizvoda";
                     };
 
                     let changePage = function (page) {
@@ -232,7 +224,7 @@ function createAccountsTable() {
                                 "<td>" + obj[i].name + "</td>" +
                                 "<td>" + obj[i].lastname + "</td>" +
                                 "<td>" + obj[i].email + "</td>" +
-                                "<td>" + obj[i].phone + "</td>" +
+                                "<td>" + obj[i].phone + "</td >" +
                                 "<td><button onclick='editAccount(this)' data-id=" + obj[i].id + " class='btn btn-sm btn-warning edit-btn'>Edit</button></td>" +
                                 "<td><button onclick='deviceDeleteBtnClickHandler(this)' data-id=" + obj[i].id + " class='btn btn-sm btn-danger delete-btn'>Delete</button></td>" +
                                 "</tr>";
@@ -270,7 +262,6 @@ function createAccountsTable() {
                         return Math.ceil(obj.length / records_per_page);
                     };
 
-
                     let pageNumbers = function () {
                         let pageNumber = document.getElementById('page_number');
                         pageNumber.innerHTML = "";
@@ -278,7 +269,6 @@ function createAccountsTable() {
                         for (let i = 1; i < numPages() + 1; i++) {
                             pageNumber.innerHTML += "<button type='button' class='btn btn-outline-primary clickPageNumber'>" + i + "</button>";
                         }
-
                     };
 
 
@@ -286,9 +276,14 @@ function createAccountsTable() {
                 }
             }
 
+
+
             let pagination = new Pagination();
             pagination.init();
-        });
+        }
+    }
+    xhttp.open("GET", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users", true);
+    xhttp.send();
 }
 
 
@@ -297,10 +292,11 @@ function editAccount(e) {
     accountsHeading.innerText = "Edit accounts"
     accountsMode = 2;
     selectedID = e.getAttribute('data-id');
-
-    fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/' + selectedID)
-        .then(response => response.json())
-        .then(obj => {
+    let xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            let obj = JSON.parse(this.responseText);
+            console.log(obj);
             nameInput.value = obj.name;
             lastnameInput.value = obj.lastname;
             emailInput.value = obj.email;
@@ -310,11 +306,14 @@ function editAccount(e) {
             emailInput.classList.remove("is-invalid");
             phoneInput.classList.remove("is-invalid");
             showView("#add_account_view");
-        });
+        }
+    }
+    xhttp.open("GET", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/" + selectedID, true);
+    xhttp.send();
 }
-
 // Delete account
 btnConfrimDelete.addEventListener('click', deleteAccount)
+
 
 function deviceDeleteBtnClickHandler(e) {
     selectedID = e.getAttribute('data-id');
@@ -322,19 +321,19 @@ function deviceDeleteBtnClickHandler(e) {
 };
 
 function deleteAccount() {
-    fetch('https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/' + selectedID, {
-        method: 'DELETE',
-    })
-        .then(response => response.json())
-        .then(() => {
+    let xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
             createAccountsTable();
             modalConfirmDelete.hide()
             modalSucces.show();
             setTimeout(function () { modalSucces.hide(); }, 2000);
-        })
-        .catch((error) => {
-            console.error('Error:', error);
+        }
+        if (xhttp.status === 400 || this.status == 500) {
             modalError.show();
             setTimeout(function () { modalSucces.hide(); }, 2000);
-        });
+        }
+    }
+    xhttp.open("DELETE", "https://6183bc8b91d76c00172d1af0.mockapi.io/products/users/" + selectedID, true);
+    xhttp.send();
 }
